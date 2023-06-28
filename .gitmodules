@@ -1,0 +1,3 @@
+[submodule "inputs-and-answers"]
+	path = inputs-and-answers
+	url = git@github.com:Fedya-L/aoc-inputs-and-answers.git
