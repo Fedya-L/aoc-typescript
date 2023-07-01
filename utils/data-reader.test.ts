@@ -19,7 +19,7 @@ describe('data-reader', () => {
 
 10000`
 
-    expect(readInput(2022, 1, 1, true)).toEqual(expected)
+    expect(readInput(2022, 1, true)).toEqual(expected)
     })
 
     it('test readAnswer', () => {
