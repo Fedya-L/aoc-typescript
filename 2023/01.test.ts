@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fixTheInput, solve1, solve2 } from "./01";
+import { fixTheInput, solve1, solve2, solve2FindFirstLast } from "./01";
 import { Reader, readAnswer, readInput } from "../utils/data-reader";
 
 
@@ -32,12 +32,13 @@ describe('2023 01', () => {
     it('2 sample', () => {
         const input = reader.readSampleInput2()
         const answer = readAnswer(2023, 1,2, true)
-        expect(solve2(input)).toBe(answer)
+        expect(solve2FindFirstLast(input)).toBe(answer)
     })
 
-    it('2', () => {
+    it('2 real', () => {
         const input = readInput(2023, 1, false)
         const answer = readAnswer(2023, 1,2, false)
-        expect(solve2(input)).toBe(answer)
+        expect(solve2FindFirstLast(input)).toBe(answer)
     })
+
 })
