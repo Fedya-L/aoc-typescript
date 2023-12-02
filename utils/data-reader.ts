@@ -23,9 +23,39 @@ class Reader {
         this.folderPath = `inputs-and-answers/${year}/${day.toString().padStart(2, '0')}/`
     }
 
+    readInput(): string {
+        const filePath = `${this.folderPath}input.txt`
+        return readFileSync(filePath).toString().trimEnd()
+    }
+
+    readAnswer1(): number {
+        const filePath = `${this.folderPath}answer_1.txt`
+        return parseInt(readFileSync(filePath).toString().trimEnd())
+    }
+
+    readAnswer2(): number {
+        const filePath = `${this.folderPath}answer_2.txt`
+        return parseInt(readFileSync(filePath).toString().trimEnd())
+    }
+
+    readSampleInput(): string {
+        const filePath = `${this.folderPath}sample_input.txt`
+        return readFileSync(filePath).toString().trimEnd()
+    }
+
     readSampleInput2(): string {
         const filePath = `${this.folderPath}sample_input_2.txt`
         return readFileSync(filePath).toString().trimEnd()
+    }
+
+    readSampleAnswer1(): number {
+        const filePath = `${this.folderPath}sample_answer_1.txt`
+        return parseInt(readFileSync(filePath).toString().trimEnd())
+    }
+
+    readSampleAnswer2(): number {
+        const filePath = `${this.folderPath}sample_answer_2.txt`
+        return parseInt(readFileSync(filePath).toString().trimEnd())
     }
 }
 
