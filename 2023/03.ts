@@ -146,8 +146,51 @@ export function solve1(input: string): number {
     return partNumbers.reduce((p, c) => p + c.value, 0)
 }
 
-export function solve2(): number {
-    return -2
+
+type Gear = {
+    adjacentNumbers: SchemeNumber[]
+}
+
+type GearMap = { 
+    [key: string]: Gear
+}
+
+function parseRawSchemeToGearMap(rawScheme: string): GearMap {
+    const lines = rawScheme.split("\n")
+    const rowsOfCharacters = lines.map(l => l.split(''))
+
+    let gearMap: GearMap = {}
+    for (const [y, chars] of rowsOfCharacters.entries()) {
+        
+        for (const [x, char] of chars.entries()) {
+            if (char !== '*') {
+                continue
+            }
+            gearMap[`${x},${y}`] = {
+                adjacentNumbers: []
+            }
+        }
+    }
+
+    return gearMap
+}
+
+export function solve2(input: string): number {
+    const schemeNumbers = parseRawSchemeToSchemeNumbers(input)
+    let gearMap = parseRawSchemeToGearMap(input)
+    for (const sn of schemeNumbers) {
+        for (const bc of sn.boundaryCoordinates) {
+            const gear = gearMap[`${bc.x},${bc.y}`]
+            if (gear) {
+                gear.adjacentNumbers.push(sn)
+            }
+        }
+    }
+
+    
+    return Object.entries(gearMap).filter(([, g]) => (g.adjacentNumbers.length == 2)).map(([k, g]) => {
+        return g.adjacentNumbers.reduce((p, c) => p * c.value, 1)
+    }).reduce((p, c) => p + c, 0)
 }
 
 export { ConvenientArray2D as FakeArray2D }
