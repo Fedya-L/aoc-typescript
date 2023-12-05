@@ -72,12 +72,11 @@ class MapRange {
         }
 
         if (seedRange.rangeEnd > this.sourceRangeEnd) {
-            const length = this.sourceRangeEnd - seedRange.rangeEnd
             untouchedRanges.push({
                 type: this.destinationType,
                 rangeStart: this.sourceRangeEnd,
                 rangeEnd: seedRange.rangeEnd,
-                length,
+                length: seedRange.rangeEnd - this.sourceRangeEnd,
             })
         }
 
@@ -191,44 +190,51 @@ export function solve2(input: string): number {
     }
     seedRanges.sort((a,b) => a.rangeStart - b.rangeStart)
 
-    
+
     const maps = rawSections.map(r => new TheMappingThing(r))
     const mapsByFromType = maps.reduce((acc, map) => {
         acc[map.fromType] = map;
         return acc;
     }, {} as { [key: string]: TheMappingThing });
+    const mapFromTypeList = maps.map(m => m.fromType)
     
-    let mapFromTypes = maps.map(m => m.fromType).reverse()
+    let seedRangesToProcess = [...seedRanges]
+    for (const mapFromType of mapFromTypeList) {
+        const map = mapsByFromType[mapFromType]
+        let processedSeeds: SeedRange[] = []
+        let unprocessedSeeds: SeedRange[] = [...seedRangesToProcess]
 
-    let ranges = [...seedRanges]
-    while(mapFromTypes.length) {
-        const typeFrom = mapFromTypes.pop()!
-        const typeTo = mapsByFromType[typeFrom].toType
-        const mapRanges = mapsByFromType[typeFrom].ranges
-        console.log('String with type', typeFrom)
+    
+        for (const mapRange of map.ranges) {
+            
+            let toProcess = [...unprocessedSeeds]
+            unprocessedSeeds = []
+            while (toProcess.length) {
+                const seedToProcess = toProcess.pop()!
 
-        let processedRanges: SeedRange[] = []
-        
-        for (const mapRange of mapRanges) {
-            let rangesToProcess = [...ranges]
-            let unprocessedRanges: SeedRange[] = []
-            while (rangesToProcess.length) {
-                const range = rangesToProcess.pop()!
-                const results = mapRange.mapRanges(range)
-
-                if (results.shiftedRange) {
-                    processedRanges.push(results.shiftedRange)
+                const mappingResult = mapRange.mapRanges(seedToProcess)
+                if (mappingResult.shiftedRange) {
+                    processedSeeds.push(mappingResult.shiftedRange)
                 }
-                results.untouchedRanges.forEach(r => unprocessedRanges.push(r))
-                console.log('checkpoint')
+                if (mappingResult.untouchedRanges.length) {
+                    mappingResult.untouchedRanges.forEach(s => unprocessedSeeds.push(s))
+                }
             }
 
-            ranges = unprocessedRanges
-            console.log('done with range')
+            
         }
 
-        ranges = [...ranges.map(c => { return { ...c, type: typeTo}}), ...processedRanges]
+        seedRangesToProcess = [
+            ...processedSeeds,
+            ...unprocessedSeeds.map(s => ({...s, type: map.toType}))
+        ]
+
+        console.log('mapping processed')
     }
 
-    return ranges.sort((c1, c2) => c2.rangeStart - c1.rangeStart)[0].rangeStart
+
+
+    const result = seedRangesToProcess.sort((a,b) => (a.rangeStart - b.rangeStart))[0].rangeStart
+    return result
+
 }
