@@ -1,12 +1,13 @@
+import { o } from "vitest/dist/types-198fd1d9"
 
 class MapRange {
     sourceRangeStart: number
     // Not inclusive
     sourceRangeEnd: number
-    destinationRangeStart: number
+    // destinationRangeStart: number
     // Not inclusive
-    destinationRangeEnd: number
-    rangeLength: number
+    // destinationRangeEnd: number
+    // rangeLength: number
     shiftValue: number
 
     sourceType: string
@@ -15,15 +16,17 @@ class MapRange {
     constructor(rawRange: string, sourceType: string, destinationType: string) {
         const [st, sf, len] = rawRange.split(" ")
         this.sourceRangeStart = +sf
-        this.destinationRangeStart = +st
-        this.rangeLength = +len
-        this.shiftValue = this.destinationRangeStart - this.sourceRangeStart
+        this.sourceRangeEnd = this.sourceRangeStart + +len
+        this.shiftValue = +st - this.sourceRangeStart
+        // this.destinationRangeStart = +st
+        // this.rangeLength = +len
+        // this.shiftValue = this.destinationRangeStart - this.sourceRangeStart
 
         this.sourceType = sourceType
         this.destinationType = destinationType
 
-        this.sourceRangeEnd = this.sourceRangeStart + this.rangeLength
-        this.destinationRangeEnd = this.destinationRangeStart + this.rangeLength
+        // this.sourceRangeEnd = this.sourceRangeStart + this.rangeLength
+        // this.destinationRangeEnd = this.destinationRangeStart + this.rangeLength
     }
 
     isNumberInRange(number: number): boolean {
@@ -135,7 +138,7 @@ class TheMappingThing {
         this.fromType = types[0]
         this.toType = types[1]
 
-        this.ranges = ranges.split("\n").map(r => new MapRange(r, this.fromType, this.toType))
+        this.ranges = ranges.split("\n").map(r => new MapRange(r, this.fromType, this.toType)).sort((a, b) => a.sourceRangeStart - b.sourceRangeStart)
     }
 
     mapNumber(number: number): number {
@@ -186,10 +189,11 @@ export function solve2(input: string): number {
     for (let i = 0; i < rawSeedRanges.length; i += 2) {
         seedRanges.push(CreateSeedRange(rawSeedRanges[i], rawSeedRanges[i+1]))
     }
+    seedRanges.sort((a,b) => a.rangeStart - b.rangeStart)
 
     
     const maps = rawSections.map(r => new TheMappingThing(r))
-    const mapsByToType = maps.reduce((acc, map) => {
+    const mapsByFromType = maps.reduce((acc, map) => {
         acc[map.fromType] = map;
         return acc;
     }, {} as { [key: string]: TheMappingThing });
@@ -199,26 +203,31 @@ export function solve2(input: string): number {
     let ranges = [...seedRanges]
     while(mapFromTypes.length) {
         const typeFrom = mapFromTypes.pop()!
-        const map = mapsByToType[typeFrom]
+        const typeTo = mapsByFromType[typeFrom].toType
+        const mapRanges = mapsByFromType[typeFrom].ranges
+        console.log('String with type', typeFrom)
 
-        let rangesToProcess = [...ranges]
         let processedRanges: SeedRange[] = []
-
-
         
-        while (rangesToProcess.length) {
-            const range = rangesToProcess.pop()!
-            for (const mapRange of map.ranges) {
+        for (const mapRange of mapRanges) {
+            let rangesToProcess = [...ranges]
+            let unprocessedRanges: SeedRange[] = []
+            while (rangesToProcess.length) {
+                const range = rangesToProcess.pop()!
                 const results = mapRange.mapRanges(range)
 
                 if (results.shiftedRange) {
                     processedRanges.push(results.shiftedRange)
                 }
-                results.untouchedRanges.forEach(r => rangesToProcess.push(r))
+                results.untouchedRanges.forEach(r => unprocessedRanges.push(r))
+                console.log('checkpoint')
             }
+
+            ranges = unprocessedRanges
+            console.log('done with range')
         }
 
-        ranges = [...rangesToProcess, ...processedRanges]
+        ranges = [...ranges.map(c => { return { ...c, type: typeTo}}), ...processedRanges]
     }
 
     return ranges.sort((c1, c2) => c2.rangeStart - c1.rangeStart)[0].rangeStart
