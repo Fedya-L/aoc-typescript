@@ -9,12 +9,18 @@ class MapRange {
     rangeLength: number
     shiftValue: number
 
-    constructor(rawRange: string) {
+    sourceType: string
+    destinationType: string
+
+    constructor(rawRange: string, sourceType: string, destinationType: string) {
         const [st, sf, len] = rawRange.split(" ")
         this.sourceRangeStart = +sf
         this.destinationRangeStart = +st
         this.rangeLength = +len
         this.shiftValue = this.destinationRangeStart - this.sourceRangeStart
+
+        this.sourceType = sourceType
+        this.destinationType = destinationType
 
         this.sourceRangeEnd = this.sourceRangeStart + this.rangeLength
         this.destinationRangeEnd = this.destinationRangeStart + this.rangeLength
@@ -42,6 +48,7 @@ class MapRange {
 
             return {
                 shiftedRange: {
+                    type: this.destinationType,
                     rangeStart: seedRange.rangeStart + this.shiftValue,
                     rangeEnd: seedRange.rangeEnd + this.shiftValue,
                     length: seedRange.length
@@ -54,6 +61,7 @@ class MapRange {
 
         if (seedRange.rangeStart < this.sourceRangeStart) {
             untouchedRanges.push({
+                type: this.destinationType,
                 rangeStart: seedRange.rangeStart,
                 rangeEnd: this.sourceRangeStart,
                 length: this.sourceRangeStart - seedRange.rangeStart,
@@ -63,6 +71,7 @@ class MapRange {
         if (seedRange.rangeEnd > this.sourceRangeEnd) {
             const length = this.sourceRangeEnd - seedRange.rangeEnd
             untouchedRanges.push({
+                type: this.destinationType,
                 rangeStart: this.sourceRangeEnd,
                 rangeEnd: seedRange.rangeEnd,
                 length,
@@ -75,6 +84,7 @@ class MapRange {
 
         return {
             shiftedRange: {
+                type: this.destinationType,
                 rangeStart: start,
                 rangeEnd: end,
                 length
@@ -125,7 +135,7 @@ class TheMappingThing {
         this.fromType = types[0]
         this.toType = types[1]
 
-        this.ranges = ranges.split("\n").map(r => new MapRange(r))
+        this.ranges = ranges.split("\n").map(r => new MapRange(r, this.fromType, this.toType))
     }
 
     mapNumber(number: number): number {
@@ -178,6 +188,38 @@ export function solve2(input: string): number {
     }
 
     
+    const maps = rawSections.map(r => new TheMappingThing(r))
+    const mapsByToType = maps.reduce((acc, map) => {
+        acc[map.fromType] = map;
+        return acc;
+    }, {} as { [key: string]: TheMappingThing });
+    
+    let mapFromTypes = maps.map(m => m.fromType).reverse()
 
-    return -1
+    let ranges = [...seedRanges]
+    while(mapFromTypes.length) {
+        const typeFrom = mapFromTypes.pop()!
+        const map = mapsByToType[typeFrom]
+
+        let rangesToProcess = [...ranges]
+        let processedRanges: SeedRange[] = []
+
+
+        
+        while (rangesToProcess.length) {
+            const range = rangesToProcess.pop()!
+            for (const mapRange of map.ranges) {
+                const results = mapRange.mapRanges(range)
+
+                if (results.shiftedRange) {
+                    processedRanges.push(results.shiftedRange)
+                }
+                results.untouchedRanges.forEach(r => rangesToProcess.push(r))
+            }
+        }
+
+        ranges = [...rangesToProcess, ...processedRanges]
+    }
+
+    return ranges.sort((c1, c2) => c2.rangeStart - c1.rangeStart)[0].rangeStart
 }
