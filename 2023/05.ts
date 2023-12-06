@@ -198,19 +198,18 @@ export function solve2(input: string): number {
     }, {} as { [key: string]: TheMappingThing });
     const mapFromTypeList = maps.map(m => m.fromType)
     
-    let seedRangesToProcess = [...seedRanges]
+    let mapUnprocessedSeeds = [...seedRanges]
     for (const mapFromType of mapFromTypeList) {
         const map = mapsByFromType[mapFromType]
         let processedSeeds: SeedRange[] = []
-        let unprocessedSeeds: SeedRange[] = [...seedRangesToProcess]
-
-    
+        let unprocessedSeeds: SeedRange[] = [...mapUnprocessedSeeds]
+        
         for (const mapRange of map.ranges) {
             
-            let toProcess = [...unprocessedSeeds]
+            let mapRangeProcessQueue = [...unprocessedSeeds]
             unprocessedSeeds = []
-            while (toProcess.length) {
-                const seedToProcess = toProcess.pop()!
+            while (mapRangeProcessQueue.length) {
+                const seedToProcess = mapRangeProcessQueue.pop()!
 
                 const mappingResult = mapRange.mapRanges(seedToProcess)
                 if (mappingResult.shiftedRange) {
@@ -224,7 +223,7 @@ export function solve2(input: string): number {
             
         }
 
-        seedRangesToProcess = [
+        mapUnprocessedSeeds = [
             ...processedSeeds,
             ...unprocessedSeeds.map(s => ({...s, type: map.toType}))
         ]
@@ -234,7 +233,7 @@ export function solve2(input: string): number {
 
 
 
-    const result = seedRangesToProcess.sort((a,b) => (a.rangeStart - b.rangeStart))[0].rangeStart
+    const result = mapUnprocessedSeeds.sort((a,b) => (a.rangeStart - b.rangeStart))[0].rangeStart
     return result
 
 }
