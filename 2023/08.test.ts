@@ -23,7 +23,7 @@ describe('2023 08', () => {
     })
 
     it('2 sample', () => {
-        const input = reader.readSampleInput()
+        const input = reader.readSampleInput2()
         const answer = reader.readSampleAnswer2()
 
         expect(solve2(input)).toBe(answer)
