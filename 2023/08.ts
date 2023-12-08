@@ -1,5 +1,3 @@
-import { Z_STREAM_END } from "zlib";
-
 function inputToStepsAndAndJunctions(input: string): [number[], { [key: string]: string[] }] {
 
     const [rawSteps, rawJunctions] = input.split("\n\n")
@@ -106,41 +104,12 @@ export function solve2(input: string): number {
             start: ze[0].diffToPrev - ze[1].diffToPrev + 1,
             end: ze[0],
             length: ze[1].diffToPrev,
-            div: (ze[0].diffToPrev - ze[1].diffToPrev) / 13019,
-
         }
     })
 
-    // let numToCount: {[key: number]: number} = {}
-    let numToCount: number[] = []
-
-    let junctionsCount = startingJunctions.length
-    let countCompare = startingJunctions.length - 1
-    for (let i = 1; i < 1_000_000_000; i++) {
-        
-        // for (onst cycle of startOfCycle) {
-            const newEnd = cycle.lastPreCycle + cycle.length * i
-
-            let checkPassed = startOfCycle.filter(j => {
-                return newEnd % j.length == j.lastPreCycle 
-            }).length
-            if (checkPassed != junctionsCount) {
-                continue
-            }
-            let count = numToCount[newEnd]
-            if (count) {
-                if (count == countCompare) {
-                    return newEnd
-                }
-                numToCount[newEnd] = count + 1
-            } else {
-                numToCount[newEnd] = 1
-            }
-        // }
-
-
-    }
-
-
-    return -2
+    const gcd = (a, b) => b == 0 ? a : gcd(b, a % b)
+    const lcm = (a, b) => a / gcd(a, b) * b
+    const leastCommonMultiplier = startOfCycle.map(j => j.length).reduce(lcm, 1)
+    
+    return leastCommonMultiplier
 }   
