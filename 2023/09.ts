@@ -30,12 +30,14 @@ export function expendedSetToExpendedSetWithPredictions(expendedSet: number[][])
 
 
     let output: number[][] = expendedSet.map(a => [...a])
+    output[output.length-1].unshift(0) 
     output[output.length-1].push(0)
 
     for (let i = output.length - 2; i >= 0; i--) {
         let curr = output[i]
         let next = output[i+1]
 
+        curr.unshift(curr[0] - next[0])
         curr.push(curr[curr.length - 1] + next[next.length -1])
     }
     return output
@@ -50,5 +52,9 @@ export function solve1(input: string): number {
 }
 
 export function solve2(input: string): number {
-    return -2
+    return input.split("\n")
+        .map(lineToHistoryEntry)
+        .map(historyEntryToExpendedSet)
+        .map(expendedSetToExpendedSetWithPredictions)
+        .reduce((p, c) => p + c[0][0], 0)
 }

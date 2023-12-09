@@ -61,10 +61,10 @@ describe('2023 09', () => {
             [0, 0, 0]
         ]
         const expectedResult = [
-            [1, 3, 6, 10, 15, 21, 28],
-            [2, 3, 4,  5,  6,  7],
-            [1, 1, 1,  1,  1],
-            [0, 0, 0, 0]
+            [0, 1, 3, 6, 10, 15, 21, 28],
+            [1, 2, 3, 4,  5,  6,  7],
+            [1, 1, 1, 1,  1,  1],
+            [0, 0, 0, 0, 0]
         ]
 
         expect(expendedSetToExpendedSetWithPredictions(input)).toStrictEqual(expectedResult)
