@@ -1,5 +1,3 @@
-import { start } from "repl"
-
 class ConvenientArray2D<T> {
 
     private data: T[][]
@@ -32,6 +30,22 @@ class ConvenientArray2D<T> {
         return this.get(xy.x, xy.y)
     }
 
+    set(x: number,y: number, value: T): boolean {
+        if (
+            y < 0 ||
+            x < 0 ||
+            this.data.length <= y ||
+            this.data[y].length <= x
+        ) {
+            return false
+        }
+        this.data[y][x] = value
+        return true
+    }
+
+    setXY(xy: {x: number, y: number}, value: T): boolean {
+        return this.set(xy.x, xy.y, value)
+    }
 }
 
 type Coordinate2D = {
@@ -123,6 +137,33 @@ function findFirstConnection(haystack: ConvenientArray2D<string>, pipeProcessors
     return undefined
 }
 
+function findPipeType(haystack: ConvenientArray2D<string>, pipeProcessors: {[key: string]: PipeProcessor}, pipeCoordinate: Coordinate2D): string | undefined {
+    const connections = adjacentRelativeCoordinatesMap2D.map(arc => {
+        const testCoordinate = moveCoordinate(pipeCoordinate, arc)
+        const testPipeType = haystack.getXY(testCoordinate)
+        if (testPipeType === '.' || testPipeType === undefined) {
+            return 0
+        }
+        return pipeProcessors[testPipeType]!.passTrough(testCoordinate, pipeCoordinate) ? 1 : 0
+    })
+    const connectionsAsString = connections.join(',')
+    switch (connectionsAsString) {
+        case '0,1,1,0':
+            return '-'
+        case '1,0,0,1':
+            return '|'
+        case '1,1,0,0':
+            return 'J'
+        case '0,0,1,1':
+            return 'F'
+        case '0,1,0,1':
+            return '7'
+        case '1,0,1,0':
+            return 'L'    
+    }
+    return undefined
+}
+
 export function solve1(input: string): number {
 
     const stringArray2D = inputToStringsArray2D(input)
@@ -141,6 +182,21 @@ export function solve1(input: string): number {
         return -154
     }
 
+    let path: Coordinate2D[] = getPath(startCoordinate, stringArray2D)
+
+    return Math.ceil(path.length / 2)
+}
+
+function getPath(startCoordinate: Coordinate2D, map: ConvenientArray2D<string>): Coordinate2D[] {
+    const firstConnection = findFirstConnection(
+        map,
+        pipeProcessors,
+        startCoordinate
+    )
+    if (firstConnection === undefined) {
+        return []
+    }
+
     let path: Coordinate2D[] = []
     let currentCoordinate = startCoordinate
     let nextCoordinate: Coordinate2D | undefined = firstConnection
@@ -148,10 +204,10 @@ export function solve1(input: string): number {
     while (nextCoordinate) {
 
         path.push(currentCoordinate)
-        const pipe = stringArray2D.getXY(nextCoordinate)
+        const pipe = map.getXY(nextCoordinate)
 
         if (pipe === undefined || pipe === '.') {
-            return -254
+            return []
         }
 
         const pipeProcessor = pipeProcessors[pipe]!
@@ -159,21 +215,39 @@ export function solve1(input: string): number {
         const nextNextCoordinate = pipeProcessor.passTrough(nextCoordinate, currentCoordinate)
 
         if (nextNextCoordinate === undefined) {
-            return -368
+            return []
         }
 
         if (coordinatesMatch(nextNextCoordinate, startCoordinate)) {
-            nextCoordinate = undefined
-            continue
+            return path
         }
 
         currentCoordinate = nextCoordinate
         nextCoordinate = nextNextCoordinate
     }
-
-    return Math.ceil(path.length / 2)
+    return path
 }
 
 export function solve2(input: string): number {
+    const stringArray2D = inputToStringsArray2D(input)
+    const startCoordinate = findStart(stringArray2D)!
+    const startType = findPipeType(stringArray2D, pipeProcessors, startCoordinate)!
+    
+    stringArray2D.setXY(startCoordinate, startType)
+
+
+    const path = getPath(startCoordinate, stringArray2D)
+
+    const clearMap = Array(stringArray2D.ySize).fill([]).map(c => {
+        return Array(stringArray2D.xSize).fill('.')
+    })
+    const mapArray2D = new ConvenientArray2D<string>(clearMap)
+    
+    for (const c of path) {
+        mapArray2D.setXY(c, stringArray2D.getXY(c)!)
+    }
+
+    
+
     return -2
 }
