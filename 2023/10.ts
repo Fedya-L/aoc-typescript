@@ -197,13 +197,13 @@ function getPath(startCoordinate: Coordinate2D, map: ConvenientArray2D<string>):
         return []
     }
 
-    let path: Coordinate2D[] = []
+    let path: Coordinate2D[] = [startCoordinate]
     let currentCoordinate = startCoordinate
     let nextCoordinate: Coordinate2D | undefined = firstConnection
 
     while (nextCoordinate) {
 
-        path.push(currentCoordinate)
+        path.push(nextCoordinate)
         const pipe = map.getXY(nextCoordinate)
 
         if (pipe === undefined || pipe === '.') {
@@ -247,7 +247,43 @@ export function solve2(input: string): number {
         mapArray2D.setXY(c, stringArray2D.getXY(c)!)
     }
 
-    
+    let insideTilecount = 0
+    for (let y = 0; y < mapArray2D.ySize; y++) {
+        let theThingCount = 0 
+        let prevEdge: string | undefined = undefined
+        for (let x = 0; x < mapArray2D.xSize; x++) {
+            let tile = mapArray2D.get(x, y)
+            switch (tile) {
+                case '-':
+                    break
+                case '|':
+                    theThingCount++
+                    break
+                case 'F':
+                case 'L':
+                    prevEdge = tile
+                    break
+                case '7':
+                    if (prevEdge == 'L') {
+                        theThingCount++
+                    }
+                    prevEdge = undefined
+                    break
+                case 'J':
+                    if (prevEdge == 'F') {
+                        theThingCount++
+                    }
+                    prevEdge = undefined
+                    break
+                case '.': 
+                    if (theThingCount % 2 == 1) {
+                        insideTilecount++
+                    }
+                    break
+            }
+        }
+        prevEdge = undefined
+    }
 
-    return -2
+    return insideTilecount
 }
