@@ -1,11 +1,11 @@
 import { Reader } from "../utils/data-reader";
-import { solve1, solve2 } from "./08";
+import { solve1, solve2 } from "./11";
 
 
 
-describe('2023 08', () => {
+describe('2023 11', () => {
 
-    const reader = new Reader(2023, 8)
+    const reader = new Reader(2023, 11)
 
     it('1 sample', () => {
         const input = reader.readSampleInput()
