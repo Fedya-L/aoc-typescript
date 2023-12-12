@@ -45,11 +45,13 @@ function doCount(condition: string, damagedGroups: number[]): number {
     }
 
 
-
     let result = 0
 
     if (condition.charAt(0) !== '#') { // .?
-        result += doCount(condition.substring(1), damagedGroups)
+        const minDamageGroupSize = damagedGroups.reduce((p,c) => p+c, damagedGroups.length - 1)
+        if (condition.length >= minDamageGroupSize) {
+            result += doCount(condition.substring(1), damagedGroups)
+        }
     }
 
     if (condition.charAt(0) !== '.') { // #?
