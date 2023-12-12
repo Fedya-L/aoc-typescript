@@ -87,17 +87,18 @@ function doCountV2(condition: string, groups: number[]): number {
         return cacheValue
     }
 
-    // '' [1,1,3]
-    // '' []
+    // '' [] => 1
+    // '' [1,1,3] => 0
     if (condition.length === 0) {
         const result = groups.length === 0 ? 1 : 0
         cache.set(cacheKey, result)
         return result
     }
 
-    // '...' []
-    // '???' [] => '...' []
-    // '###' []
+    // '...' [] => 1
+    // '???' [] => '...' [] => 1 (assumes that '?' can be only transformed into '.')
+    // '###' [] => 0
+    // '??#' [] => 0
     if (groups.length === 0) {
         const result = condition.includes('#') ? 0 : 1
         cache.set(cacheKey, result)
@@ -107,6 +108,7 @@ function doCountV2(condition: string, groups: number[]): number {
     const firstChar = condition.charAt(0)
 
     // '......???.###' [1,1,3]
+    // Only one part forward - trimming
     if (firstChar === '.') {
         // '???.###' [1,1,3]
         const result = doCountV2(condition.slice(1), groups)
@@ -120,10 +122,13 @@ function doCountV2(condition: string, groups: number[]): number {
     if (firstChar === '#') {
         const firstGroup = groups[0]
 
-        // '#'
+        // '#?'
         const groupString = condition.slice(0, firstGroup)
         // This check also puts an assumption that '?' is '#'
-        const isFirstGroupPossible = groupString.includes('.') === false
+        const isFirstGroupPossible = (
+            groupString.includes('.') === false &&
+            groupString.length == firstGroup
+        )
         // This check also puts an assumtion that '?' is '.'
         const isFirstGroupReallyPossible = isFirstGroupPossible && condition.charAt(firstGroup) !== '#'
 
