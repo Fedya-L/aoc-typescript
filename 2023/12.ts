@@ -1,3 +1,4 @@
+import { validateHeaderValue } from "http"
 
 type DamagedRecord = {
     condition: string
@@ -17,18 +18,30 @@ function lineToDamagedRecord(line: string): DamagedRecord {
 }
 
 function damagedRecordToArrangementsCount(damagedRecord: DamagedRecord): number {
+    cache = new Map<string, number>()
     const result = doCount(damagedRecord.condition, damagedRecord.damagedGroups)
 
     return result
 }
 
+
+let cache = new Map<string, number>()
 function doCount(condition: string, damagedGroups: number[]): number {
+    const cacheKey = condition + damagedGroups.join(',')
+    const cachedValue = cache.get(cacheKey)
+    if (cachedValue !== undefined) {
+        return cachedValue
+    }
     if (condition.length === 0) {
-        return damagedGroups.length === 0 ? 1 : 0
+        const result = damagedGroups.length === 0 ? 1 : 0
+        cache.set(cacheKey, result)
+        return result
     } 
 
     if (damagedGroups.length === 0) {
-        return condition.includes('#') ? 0 : 1
+        const result =  condition.includes('#') ? 0 : 1
+        cache.set(cacheKey, result)
+        return result
     }
 
 
@@ -49,11 +62,10 @@ function doCount(condition: string, damagedGroups: number[]): number {
             (firstGroup == condition.length || condition.charAt(firstGroup) !== '#')
             ) {
             result += doCount(condition.substring(firstGroup + 1), damagedGroups.slice(1))
-        } else {
-            return result
         }
     }
 
+    cache.set(cacheKey, result)
     return result
 }
 
@@ -66,5 +78,15 @@ export function solve1(input: string): number {
 }
 
 export function solve2(input: string): number {
-    return -2
+    const something = input.split("\n")
+    .map(lineToDamagedRecord)
+    .map(dr => {
+        dr.condition = Array(5).fill(dr.condition).join('?')
+        dr.damagedGroups = Array(5).fill([...dr.damagedGroups])
+            .reduce<number[]>((p,c) => p.concat(c), [])
+        return dr
+    })
+    .map(damagedRecordToArrangementsCount)
+    .reduce((p, c) => p + c, 0)
+    return something
 }
