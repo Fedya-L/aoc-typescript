@@ -19,14 +19,15 @@ function lineToDamagedRecord(line: string): DamagedRecord {
 
 function damagedRecordToArrangementsCount(damagedRecord: DamagedRecord): number {
     cache = new Map<string, number>()
-    const result = doCount(damagedRecord.condition, damagedRecord.damagedGroups)
+    const minDamageGroupSize = damagedRecord.damagedGroups.reduce((p,c) => p+c, damagedRecord.damagedGroups.length - 1)
+    const result = doCount(damagedRecord.condition, damagedRecord.damagedGroups, minDamageGroupSize)
 
     return result
 }
 
 
 let cache = new Map<string, number>()
-function doCount(condition: string, damagedGroups: number[]): number {
+function doCount(condition: string, damagedGroups: number[], minDamageGroupSize: number): number {
     const cacheKey = condition + damagedGroups.join(',')
     const cachedValue = cache.get(cacheKey)
     if (cachedValue !== undefined) {
@@ -48,9 +49,8 @@ function doCount(condition: string, damagedGroups: number[]): number {
     let result = 0
 
     if (condition.charAt(0) !== '#') { // .?
-        const minDamageGroupSize = damagedGroups.reduce((p,c) => p+c, damagedGroups.length - 1)
         if (condition.length >= minDamageGroupSize) {
-            result += doCount(condition.substring(1), damagedGroups)
+            result += doCount(condition.substring(1), damagedGroups, minDamageGroupSize)
         }
     }
 
@@ -63,7 +63,9 @@ function doCount(condition: string, damagedGroups: number[]): number {
             condition.substring(0, firstGroup).includes('.') === false &&
             (firstGroup == condition.length || condition.charAt(firstGroup) !== '#')
             ) {
-            result += doCount(condition.substring(firstGroup + 1), damagedGroups.slice(1))
+            const newDamageGroups = damagedGroups.slice(1)
+            const newMinDamageGroupSize = newDamageGroups.reduce((p,c) => p + c, newDamageGroups.length - 1)
+            result += doCount(condition.substring(firstGroup + 1), newDamageGroups, newMinDamageGroupSize)
         }
     }
 
