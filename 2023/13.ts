@@ -23,17 +23,12 @@ function splitToPattern(split: string): Pattern {
 }
 
 
-function findMirrorSplitIndex(array: string[], startingAt: number): number {
+function findMirrorSplitIndex(array: string[], startingAt: number, expectedMismath: number = 0): number {
     const i = startingAt
-    const a = array[i]
-    const b = array[i+1]
 
-    if (a !== b) {
-        return 0
-    }
-    // check mirroring
-    let isMirror = true
-    for (let ii = 1; ii <= i; ii++) {
+    let mismatchCount = 0
+
+    for (let ii = 0; ii <= i; ii++) {
         const ai = i-ii
         const bi = i+1+ii
 
@@ -44,11 +39,9 @@ function findMirrorSplitIndex(array: string[], startingAt: number): number {
         const aa = array[ai]
         const bb = array[bi]
 
-        if (aa != bb) {
-            isMirror = false
-        }
+        mismatchCount += countMismatches(aa, bb)
     }
-    if (isMirror) {
+    if (mismatchCount == expectedMismath) {
         return (i+1)
     }
     return 0
@@ -117,44 +110,31 @@ function patternToVariantValue(pattern: Pattern): number {
     return fallback
 }
 
+function countMismatches(a: string, b: string): number {
+    let count = 0;
+    for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) {
+            count++;
+        }
+    }
+    return count;
+}
+
 function patternToVariantValueV2(pattern: Pattern): number {
-    const variantsCount = pattern.rows.length * pattern.columns.length
-
     const {rows, columns} = pattern
-
-    let originValue = patternToValue(pattern) 
-    let fallback = 0
-
     for (let i = 0; i < rows.length - 1; i++) {
-        const variantStart = rows.length * i
-        const variantStop = variantStart + rows.length * 2
-        for (let ii = variantStart; ii < variantStop; ii++) {
-            const variant = patternToPatternVariant(pattern, ii) 
-            const result = findMirrorSplitIndex(variant.rows, i) * 100
-
-            if (result !== 0 && result !== originValue) {
-                return result
-            }
-            if (result === originValue) {
-                fallback = originValue
-            }
+        const result = findMirrorSplitIndex(rows, i, 1)
+        if (result !== 0) {
+            return result * 100
         }
     }
     for (let i = 0; i < columns.length - 1; i++) {
-        const variantStart = rows.length * i
-        const variantStop = variantStart + rows.length * 2
-        for (let ii = variantStart; ii < variantStop; ii++) {
-            const variant = patternToPatternVariant(pattern, ii) 
-            const result = findMirrorSplitIndex(variant.columns, i)
-            if (result !== 0 && result !== originValue) {
-                return result
-            }
-            if (result === originValue) {
-                fallback = originValue
-            }
+        const result = findMirrorSplitIndex(columns, i, 1)
+        if (result !== 0) {
+            return result
         }
     }
-    return fallback
+    return 0
 }
 
 export function solve1(input: string): number {
