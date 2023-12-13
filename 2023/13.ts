@@ -1,4 +1,5 @@
 import { count } from "console"
+import { runInContext } from "vm"
 
 type Pattern = {
     rows: string[]
@@ -82,6 +83,51 @@ function patternToValue(pattern: Pattern): number {
     return 0
 }
 
+// 0 is a variant, not an original
+function patternToPatternVariant(pattern: Pattern, variant: number): Pattern {
+    const row = Math.floor(variant / pattern.columns.length)
+    const column = variant % pattern.columns.length
+
+    const rows = [...pattern.rows]
+
+    const tempRow = rows[row].split('')
+    tempRow[column] = tempRow[column] === '.' ? '#' : '.' 
+
+    rows[row] = tempRow.join('')
+
+    const columns = [...pattern.columns]
+
+    const tempColumn = columns[column].split('')
+    tempColumn[row] = tempColumn[row] === '.' ? '#' : '.'
+
+    columns[column] = tempColumn.join('')
+
+    return {
+        rows,
+        columns
+    }
+}
+
+function patternToVariantValue(pattern: Pattern): number {
+    const variantsCount = pattern.rows.length * pattern.columns.length
+
+    let originValue = patternToValue(pattern)
+    let fallback = 0
+    for (let i = 0; i < variantsCount; i++) {
+        const variant = patternToPatternVariant(pattern, i)
+
+        const value = patternToValue(variant)
+        if (value > 0 && originValue !== value) {
+            return value
+        }
+        if (originValue == value) {
+            fallback = value
+        }
+    }
+
+    return fallback
+}
+
 export function solve1(input: string): number {
     const patterns = input.split("\n\n").map(splitToPattern)
     const values = patterns.map(patternToValue)
@@ -89,5 +135,7 @@ export function solve1(input: string): number {
 }
 
 export function solve2(input: string): number {
-    return -2
+    const patterns = input.split("\n\n").map(splitToPattern)
+    const values = patterns.map(patternToVariantValue)
+    return values.reduce((p,c) => p+c, 0)
 }
