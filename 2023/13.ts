@@ -22,62 +22,51 @@ function splitToPattern(split: string): Pattern {
     return { rows, columns}
 }
 
+
+function findMirrorSplitIndex(array: string[], startingAt: number): number {
+    const i = startingAt
+    const a = array[i]
+    const b = array[i+1]
+
+    if (a !== b) {
+        return 0
+    }
+    // check mirroring
+    let isMirror = true
+    for (let ii = 1; ii <= i; ii++) {
+        const ai = i-ii
+        const bi = i+1+ii
+
+        if (ai < 0 || bi >= array.length) {
+            break
+        }
+
+        const aa = array[ai]
+        const bb = array[bi]
+
+        if (aa != bb) {
+            isMirror = false
+        }
+    }
+    if (isMirror) {
+        return (i+1)
+    }
+    return 0
+}
 // column * 1
 // row * 100
 function patternToValue(pattern: Pattern): number {
     const {rows, columns} = pattern
     for (let i = 0; i < rows.length - 1; i++) {
-        const a = rows[i]
-        const b = rows[i+1]
-
-        if (a === b) {
-            // check mirroring
-            let isMirror = true
-            for (let ii = 1; ii <= i; ii++) {
-                const ai = i-ii
-                const bi = i+1+ii
-
-                if (ai < 0 || bi >= rows.length) {
-                    break
-                }
-
-                const aa = rows[ai]
-                const bb = rows[bi]
-
-                if (aa != bb) {
-                    isMirror = false
-                }
-            }
-            if (isMirror) {
-                return (i+1) * 100
-            }
+        const result = findMirrorSplitIndex(rows, i)
+        if (result !== 0) {
+            return result * 100
         }
     }
     for (let i = 0; i < columns.length - 1; i++) {
-        const a = columns[i]
-        const b = columns[i+1]
-
-        if (a === b) {
-            // check mirroring
-            let isMirror = true
-            for (let ii = 1; ii <= i; ii++) {
-                const ai = i-ii
-                const bi = i+1+ii
-
-                if (ai < 0 || bi >= columns.length) {
-                    break
-                }
-
-                const aa = columns[ai]
-                const bb = columns[bi]
-
-                if (aa != bb) {
-                    isMirror = false
-                }
-            }
-            if (isMirror) {
-                return i+1
-            }
+        const result = findMirrorSplitIndex(columns, i)
+        if (result !== 0) {
+            return result
         }
     }
     return 0
@@ -128,6 +117,46 @@ function patternToVariantValue(pattern: Pattern): number {
     return fallback
 }
 
+function patternToVariantValueV2(pattern: Pattern): number {
+    const variantsCount = pattern.rows.length * pattern.columns.length
+
+    const {rows, columns} = pattern
+
+    let originValue = patternToValue(pattern) 
+    let fallback = 0
+
+    for (let i = 0; i < rows.length - 1; i++) {
+        const variantStart = rows.length * i
+        const variantStop = variantStart + rows.length * 2
+        for (let ii = variantStart; ii < variantStop; ii++) {
+            const variant = patternToPatternVariant(pattern, ii) 
+            const result = findMirrorSplitIndex(variant.rows, i) * 100
+
+            if (result !== 0 && result !== originValue) {
+                return result
+            }
+            if (result === originValue) {
+                fallback = originValue
+            }
+        }
+    }
+    for (let i = 0; i < columns.length - 1; i++) {
+        const variantStart = rows.length * i
+        const variantStop = variantStart + rows.length * 2
+        for (let ii = variantStart; ii < variantStop; ii++) {
+            const variant = patternToPatternVariant(pattern, ii) 
+            const result = findMirrorSplitIndex(variant.columns, i)
+            if (result !== 0 && result !== originValue) {
+                return result
+            }
+            if (result === originValue) {
+                fallback = originValue
+            }
+        }
+    }
+    return fallback
+}
+
 export function solve1(input: string): number {
     const patterns = input.split("\n\n").map(splitToPattern)
     const values = patterns.map(patternToValue)
@@ -136,6 +165,6 @@ export function solve1(input: string): number {
 
 export function solve2(input: string): number {
     const patterns = input.split("\n\n").map(splitToPattern)
-    const values = patterns.map(patternToVariantValue)
+    const values = patterns.map(patternToVariantValueV2)
     return values.reduce((p,c) => p+c, 0)
 }
