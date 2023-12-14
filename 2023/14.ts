@@ -8,37 +8,72 @@ function inputToMap(input: string): ConvenientArray2D<Tile> {
     return new ConvenientArray2D(data)
 }
 
-export function solve1(input: string): number {
-    const map = inputToMap(input)
-
-    let result = 0
+function tiltTheMap(map: ConvenientArray2D<Tile>, xx: number, yy: number) {
     for (const [x, y] of map) {
         const tile = map.get(x, y)
         if (tile !== 'O') {
             continue
         }
+        let lastValidX = x
+        let prevX = x + xx
         let lastValidY = y
-        let prevY = y - 1
-        let tileAbove = map.get(x, prevY)
+        let prevY = y + yy
+        let tileAbove = map.get(prevX, prevY)
 
         while (tileAbove === '.') {
+            lastValidX = prevX
             lastValidY = prevY
-            prevY--
+            prevX += xx
+            prevY += yy
 
-            tileAbove = map.get(x, prevY)
+            tileAbove = map.get(prevX, prevY)
         }
 
-        if (lastValidY !== y) {
-            map.set(x, lastValidY, 'O')
+        if (lastValidX !== x || lastValidY !== y) {
+            map.set(lastValidX, lastValidY, 'O')
             map.set(x, y, '.')
         }
+    } 
+}
 
-        result += map.ySize - lastValidY
+function calculateTheLoad(map: ConvenientArray2D<Tile>): number {
+
+    let result = 0
+
+    for (const [x, y] of map) {
+        const tile = map.get(x, y)
+        if (tile !== 'O') {
+            continue
+        }
+        result += map.ySize - y
     }
 
     return result 
 }
 
+export function solve1(input: string): number {
+    const map = inputToMap(input)
+
+    tiltTheMap(map, 0, -1)
+    
+    return calculateTheLoad(map)
+}
+
 export function solve2(input: string): number {
-    return -2
+    const map = inputToMap(input)
+
+    const tilts = [
+        [0, -1],
+        [-1, 0],
+        [0, 1],
+        [1, 0],
+    ]
+    let loads: number[] = []
+    for (let i = 0; i < 10; i++) {
+        for (const [x,y] of tilts) {
+            tiltTheMap(map, x, y)
+            loads.push(calculateTheLoad(map))
+        }
+    }
+    return loads[loads.length - 1]
 }
