@@ -103,12 +103,12 @@ export function solve2(input: string): number {
         [0, 1, iterateFromBottom],
         [1, 0, iterateFromRight],
     ]
-    let loads: number[] = [calculateTheLoad(map)]
+    let loads: number[] = []
     for (let i = 0; i < 2000; i++) {
         for (const [x,y, iterator] of tilts) {
             tiltTheMap(map, iterator(size) ,x, y)
-            loads.push(calculateTheLoad(map))
         }
+        loads.push(calculateTheLoad(map))
     }
 
 
@@ -130,18 +130,11 @@ export function solve2(input: string): number {
         }
     }
 
-    const patternStartIndex = length
     const patternItemIndex = (
         (1_000_000_000 - 1) // adjusted for index
-        - (patternStartIndex)
+        - (length)
         ) % pattern.length
     const result = pattern[patternItemIndex]
-
-    // 400 - 28
-    // 372, last index is 371
-    // iterating 400 times
-    // last index is 399, but I need to adjuct by 28
-    // last 
 
     return result
 }
