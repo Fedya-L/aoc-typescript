@@ -153,19 +153,11 @@ function nextCoordinate(coordinate: Coordinate2D, direction: Direction): Coordin
     return { x, y }
 }
 
-export function solve1(input: string): number {
-
-    let beams: Beam[] = [
-        {
-            coordinate: {x: 0, y: 0},
-            direction: Direction.Right
-        }
-    ]
-
-    const layout = inputToLayout(input)
+function caclulateEnergized(startingBeam: Beam, layout: Layout): number {
     const coordinateSet = new CoordinateSet()
     const processedSet = new Set<string>()
 
+    let beams = [startingBeam]
     
     while (beams.length) {
         let beam = beams.pop()!
@@ -190,6 +182,45 @@ export function solve1(input: string): number {
     return coordinateSet.getSize()
 }
 
+export function solve1(input: string): number {
+
+    const startingBeam = {
+        coordinate: {x: 0, y: 0},
+        direction: Direction.Right
+    }
+
+    const layout = inputToLayout(input)
+
+    return caclulateEnergized(startingBeam, layout)
+}
+
 export function solve2(input: string): number {
-    return -2
+
+    const layout = inputToLayout(input)
+    let beams: Beam[] = []
+
+    for (let i = 0; i < layout.xSize; i++) {
+        beams.push({
+            coordinate: { x: i, y: 0},
+            direction: Direction.Down
+        })
+        beams.push({
+            coordinate: {x: i, y: layout.ySize -1},
+            direction: Direction.Up
+        })
+    }
+    for (let i = 0; i < layout.ySize; i++) {
+        beams.push({
+            coordinate: { x: 0, y: i},
+            direction: Direction.Right
+        })
+        beams.push({
+            coordinate: {x: layout.xSize - 1, y: i},
+            direction: Direction.Left
+        })
+    }
+
+    const results = beams.map(b => caclulateEnergized(b, layout))
+
+    return results.sort((a,b) => b - a)[0]
 }
