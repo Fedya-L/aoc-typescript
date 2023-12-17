@@ -133,15 +133,49 @@ export function solve1(input: string): number {
         startingPath
     ]
 
+    let finishedPaths: Path[] = []
+
     const searchedMap = new Map<string, number>()
 
     while (searchQueue.length) {
         const searchPath = searchQueue.pop()!
-        searchedMap
+        const key = pathToMapKey(searchPath)
+        const totalHeatLossForKey = searchedMap.get(key)
+        if (
+            totalHeatLossForKey !== undefined && 
+            searchPath.totalHeatLoss > totalHeatLossForKey
+        ) {
+            // There is already a better value
+            continue
+        }
+        searchedMap.set(key, searchPath.totalHeatLoss)
+
+        if (
+            searchPath.currentCoordinate.x === endCoordinate.x &&
+            searchPath.currentCoordinate.y === endCoordinate.y
+        ) {
+            finishedPaths.push(searchPath)
+            continue
+        }
+
+        const paths = getNextPaths(searchPath, cityMap)
+
+        for (const p of paths) {
+            const key = pathToMapKey(p)
+            const totalHeatLossForKey = searchedMap.get(key)
+            if (
+                totalHeatLossForKey !== undefined && 
+                searchPath.totalHeatLoss > totalHeatLossForKey
+            ) {
+                // There is already a better value
+                continue
+            }
+            searchQueue.push(p)
+        }
 
     }
 
-    return -1
+    return finishedPaths.sort((a, b) => a.totalHeatLoss - b.totalHeatLoss)[0].totalHeatLoss
 }
 
 export function solve2(input: string): number {
