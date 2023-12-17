@@ -58,6 +58,23 @@ class ConvenientArray2D<T> {
     }
 }
 
+type Coordinate2D = {
+    x: number
+    y: number
+}
+
+function* iterateXY(x: number, y: number): Generator<[number, number], void, unknown> {
+    for (let yy = 0; yy < y; yy++) {
+        for (let xx = 0; xx < x; xx++) {
+            yield [xx, yy]
+        }
+    }
+}
+
+type MyIterator = Generator<[number, number], void, unknown>
+
 export {
-    ConvenientArray2D
+    ConvenientArray2D,
+    Coordinate2D,
+    iterateXY,
 }
