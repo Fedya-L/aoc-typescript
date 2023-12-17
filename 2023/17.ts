@@ -134,16 +134,20 @@ export function solve1(input: string): number {
     ]
 
     let finishedPaths: Path[] = []
+    let minPathValue = (cityMap.xSize + cityMap.ySize) * 20
 
     const searchedMap = new Map<string, number>()
 
     while (searchQueue.length) {
         const searchPath = searchQueue.pop()!
+        if (searchPath.totalHeatLoss >= minPathValue) {
+            continue
+        }
         const key = pathToMapKey(searchPath)
         const totalHeatLossForKey = searchedMap.get(key)
         if (
             totalHeatLossForKey !== undefined && 
-            searchPath.totalHeatLoss > totalHeatLossForKey
+            searchPath.totalHeatLoss >= totalHeatLossForKey
         ) {
             // There is already a better value
             continue
@@ -155,6 +159,7 @@ export function solve1(input: string): number {
             searchPath.currentCoordinate.y === endCoordinate.y
         ) {
             finishedPaths.push(searchPath)
+            minPathValue = Math.min(minPathValue, searchPath.totalHeatLoss)
             continue
         }
 
@@ -162,6 +167,9 @@ export function solve1(input: string): number {
 
         for (const p of paths) {
             const key = pathToMapKey(p)
+            if (p.totalHeatLoss >= minPathValue) {
+                continue
+            }
             const totalHeatLossForKey = searchedMap.get(key)
             if (
                 totalHeatLossForKey !== undefined && 
@@ -172,10 +180,10 @@ export function solve1(input: string): number {
             }
             searchQueue.push(p)
         }
-
+        searchQueue = searchQueue.sort((a, b) => (a.currentCoordinate.x + a.currentCoordinate.y) - (b.currentCoordinate.x + b.currentCoordinate.y))
     }
 
-    return finishedPaths.sort((a, b) => a.totalHeatLoss - b.totalHeatLoss)[0].totalHeatLoss
+    return minPathValue
 }
 
 export function solve2(input: string): number {
