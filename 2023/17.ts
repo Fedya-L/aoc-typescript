@@ -137,10 +137,14 @@ export function solve1(input: string): number {
     }
 
 
-    let searchQueue: Path[] = [
-        startingPath,
-        {...startingPath, lastDirection: Direction.Down}
-    ]
+    // let searchQueue: Path[] = [
+    //     startingPath,
+    //     {...startingPath, lastDirection: Direction.Down}
+    // ]
+
+    let searchQueue = new BinarySearchTree()
+    searchQueue.insert(startingPath)
+    searchQueue.insert({...startingPath, lastDirection: Direction.Down})
 
     let finishedPaths: Path[] = []
     let minPathValue = (cityMap.xSize + cityMap.ySize) * 20
@@ -148,7 +152,7 @@ export function solve1(input: string): number {
     const searchedMap = new Map<string, number>()
 
     while (searchQueue.length) {
-        const searchPath = searchQueue.pop()!
+        const searchPath = searchQueue.popMin()!
         if (searchPath.totalHeatLoss >= minPathValue) {
             continue
         }
@@ -187,9 +191,8 @@ export function solve1(input: string): number {
                 // There is already a better value
                 continue
             }
-            searchQueue.push(p)
+            searchQueue.insert(p)
         }
-        searchQueue = searchQueue.sort((a, b) => b.totalHeatLoss - a.totalHeatLoss)
     }
 
     return minPathValue
