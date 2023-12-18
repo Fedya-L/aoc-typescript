@@ -180,7 +180,7 @@ export function solve1(input: string): number {
             }
             searchQueue.push(p)
         }
-        searchQueue = searchQueue.sort((a, b) => (a.currentCoordinate.x + a.currentCoordinate.y) - (b.currentCoordinate.x + b.currentCoordinate.y))
+        searchQueue = searchQueue.sort((a, b) => b.totalHeatLoss - a.totalHeatLoss)
     }
 
     return minPathValue
