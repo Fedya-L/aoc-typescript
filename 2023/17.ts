@@ -58,27 +58,35 @@ function getNextPathInDirection(path: Path, cityMap: CityMap, direction: Directi
     }
 }
 
-function getNextPaths(path: Path, cityMap: CityMap): Path[] {
+function getNextPaths(path: Path, cityMap: CityMap, minLength: number, maxLength: number): Path[] {
     let paths: Path[] = []
 
     const lastDirection = path.lastDirection
-    if (path.lastDirectionRepeatedCount < 3) {
-        const pathForward = getNextPathInDirection(path, cityMap, lastDirection)
-        if (pathForward) {
-            paths.push(pathForward)
-        }
-    }
 
     const directionToTheLeft: Direction = (4 + lastDirection - 1) % 4
-    const pathToTheLeft = getNextPathInDirection(path, cityMap, directionToTheLeft)
-    if (pathToTheLeft) {
-        paths.push(pathToTheLeft)
-    }
-
     const directionToTheRight = (lastDirection + 1) % 4
-    const pathToTheRight = getNextPathInDirection(path, cityMap, directionToTheRight)
-    if (pathToTheRight) {
-        paths.push(pathToTheRight)
+
+    let pathToTheLeft: Path | undefined = path
+    let pathToTheRight: Path | undefined = path
+    for (let i = 1; i <= maxLength; i++){
+        // const pathForward = getNextPathInDirection(path, cityMap, lastDirection, i)
+        // if (pathForward) {
+        //     paths.push(pathForward)
+        // }
+
+        if (pathToTheLeft) {
+            pathToTheLeft = getNextPathInDirection(pathToTheLeft, cityMap, directionToTheLeft)
+        }
+        if (pathToTheLeft && i >= minLength) {
+            paths.push(pathToTheLeft)
+        }
+
+        if (pathToTheRight) {
+            pathToTheRight = getNextPathInDirection(pathToTheRight, cityMap, directionToTheRight)   
+        }
+        if (pathToTheRight && i >= minLength) {
+            paths.push(pathToTheRight)
+        }
     }
 
     return paths
@@ -130,7 +138,8 @@ export function solve1(input: string): number {
 
 
     let searchQueue: Path[] = [
-        startingPath
+        startingPath,
+        {...startingPath, lastDirection: Direction.Down}
     ]
 
     let finishedPaths: Path[] = []
@@ -163,7 +172,7 @@ export function solve1(input: string): number {
             continue
         }
 
-        const paths = getNextPaths(searchPath, cityMap)
+        const paths = getNextPaths(searchPath, cityMap, 1, 3)
 
         for (const p of paths) {
             const key = pathToMapKey(p)
@@ -186,7 +195,152 @@ export function solve1(input: string): number {
     return minPathValue
 }
 
+
+class Node {
+    public value: Path;
+    public left: Node | null;
+    public right: Node | null;
+    
+    constructor(value: Path) {
+        this.value = value;
+        this.left = null;
+        this.right = null;
+    }
+}
+
+class BinarySearchTree {
+    private root: Node | null;
+    length: number;
+
+    constructor() {
+        this.root = null;
+        this.length = 0
+    }
+
+    insert(value: Path): void {
+        const newNode = new Node(value);
+        this.length++
+        if (!this.root) {
+            this.root = newNode;
+        } else {
+            this.insertNode(this.root, newNode);
+        }
+    }
+
+    private insertNode(node: Node, newNode: Node): void {
+        if (newNode.value.totalHeatLoss < node.value.totalHeatLoss) {
+            if (!node.left) {
+                node.left = newNode;
+            } else {
+                this.insertNode(node.left, newNode);
+            }
+        } else {
+            if (!node.right) {
+                node.right = newNode;
+            } else {
+                this.insertNode(node.right, newNode);
+            }
+        }
+    }
+
+    popMin(): Path | null {
+        if (!this.root) {
+            return null;
+        }
+
+        let current = this.root;
+        let parent: Node | null = null;
+
+        while (current.left !== null) {
+            parent = current;
+            current = current.left;
+        }
+
+        if (parent === null) {
+            this.root = current.right;
+        } else {
+            parent.left = current.right;
+        }
+
+        this.length--;
+        return current.value;
+    }
+}
+
 export function solve2(input: string): number {
-    return -2
+    const cityMap = inputToCityMap(input)
+
+    const startingPath: Path = {
+        currentCoordinate: {x: 0, y: 0},
+        totalHeatLoss: 0,
+        lastDirection: Direction.Right,
+        lastDirectionRepeatedCount: 0
+    }
+
+    const endCoordinate: Coordinate2D = {
+        x: cityMap.xSize - 1,
+        y: cityMap.ySize - 1,
+    }
+
+
+    // let searchQueue: Path[] = [
+    //     startingPath,
+    //     {...startingPath, lastDirection: Direction.Down}
+    // ]
+
+    let searchQueue = new BinarySearchTree()
+    searchQueue.insert(startingPath)
+    searchQueue.insert({...startingPath, lastDirection: Direction.Down})
+
+    let finishedPaths: Path[] = []
+    let minPathValue = Number.MAX_SAFE_INTEGER
+
+    const searchedMap = new Map<string, number>()
+
+    while (searchQueue.length) {
+        const searchPath = searchQueue.popMin()!
+        if (searchPath.totalHeatLoss >= minPathValue) {
+            continue
+        }
+        const key = pathToMapKey(searchPath)
+        const totalHeatLossForKey = searchedMap.get(key)
+        if (
+            totalHeatLossForKey !== undefined && 
+            searchPath.totalHeatLoss >= totalHeatLossForKey
+        ) {
+            // There is already a better value
+            continue
+        }
+        searchedMap.set(key, searchPath.totalHeatLoss)
+
+        if (
+            searchPath.currentCoordinate.x === endCoordinate.x &&
+            searchPath.currentCoordinate.y === endCoordinate.y
+        ) {
+            finishedPaths.push(searchPath)
+            minPathValue = Math.min(minPathValue, searchPath.totalHeatLoss)
+            continue
+        }
+
+        const paths = getNextPaths(searchPath, cityMap, 4, 10)
+
+        for (const p of paths) {
+            const key = pathToMapKey(p)
+            if (p.totalHeatLoss >= minPathValue) {
+                continue
+            }
+            const totalHeatLossForKey = searchedMap.get(key)
+            if (
+                totalHeatLossForKey !== undefined && 
+                searchPath.totalHeatLoss > totalHeatLossForKey
+            ) {
+                // There is already a better value
+                continue
+            }
+            searchQueue.insert(p)
+        }
+    }
+
+    return minPathValue
 }
 
