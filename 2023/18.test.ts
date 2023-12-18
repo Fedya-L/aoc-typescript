@@ -38,17 +38,6 @@ describe('2023 18', () => {
     })
 
     it('calculatePolygonArea', () => {
-        // const coordinates: Coordinate2D[] = [
-        //     {x: 0, y: 0},
-        //     {x: 2, y: 0},
-        //     {x: 2, y: 2},
-        //     {x: 4, y: 2},
-        //     {x: 4, y: 0},
-        //     {x: 6, y: 0},
-        //     {x: 6, y: 5},
-        //     {x: 0, y: 5},
-        // ];
-
         const coordinates: Coordinate2D[] = [
             {x: 0, y: 0},
             {x: 2, y: 0},
@@ -59,7 +48,7 @@ describe('2023 18', () => {
         ];
 
         const area = calculatePolygonArea(coordinates)
-        expect(area).toBeGreaterThan(110)
+        expect(area).toBe(5)
     })
 
     it('calculatePerimeter', () => {

@@ -116,18 +116,15 @@ const coordinatesInDirection = (coordinate: Coordinate2D, direction: Direction, 
 }
 
 const coordinatesMappingArray = [
-              [0, -1],
-    [-1, 0],           [1, 0],
-              [0, 1],
+              [0, -1], // Up
+              [1, 0], // Right
+              [0, 1], // Down
+              [-1, 0], // Left
 ]
 
 const getNeighbours = (coordinate: Coordinate2D, minCoordinate: Coordinate2D, maxCoordinate: Coordinate2D): Coordinate2D[] => {
     let coordinates: Coordinate2D[] = []
     for (const coordinateShift of coordinatesMappingArray) {
-        const neighbourCoordinate = {
-            y: coordinate.y + coordinateShift[1],
-        }
-        
         const x = coordinate.x + coordinateShift[0]
         const y = coordinate.y + coordinateShift[1]
 
@@ -226,7 +223,22 @@ const inputToInstructionsV2 = (input: string): Instruction[] => {
 }
 
 export const solve2 = (input: string): number => {
-    return doSolve(inputToInstructionsV2(input))
+    const instructions = inputToInstructionsV2(input)
+    let currentCoordinate: Coordinate2D = {x: 0, y: 0}
+
+    let coordinates: Coordinate2D[] = [{...currentCoordinate}]
+
+    for (const instruction of instructions) {
+        const [x, y] = coordinatesMappingArray[instruction.direction]
+        currentCoordinate.x += x * instruction.distance
+        currentCoordinate.y += y * instruction.distance
+
+        coordinates.push({...currentCoordinate})
+    }
+
+    const area = calculateArea(coordinates)
+
+    return area
 }
 
 export const calculatePolygonArea = (coordinates: Coordinate2D[]): number => {
