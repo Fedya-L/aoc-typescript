@@ -228,3 +228,38 @@ const inputToInstructionsV2 = (input: string): Instruction[] => {
 export const solve2 = (input: string): number => {
     return doSolve(inputToInstructionsV2(input))
 }
+
+export const calculatePolygonArea = (coordinates: Coordinate2D[]): number => {
+    let area = 0
+
+    for (let i = 0; i < coordinates.length; i++) {
+        const coordinateA = coordinates[i]
+        const coordinateB = coordinates[(i+1)%coordinates.length]
+
+        area += (coordinateA.x * coordinateB.y) - (coordinateB.x * coordinateA.y)
+    }
+
+    area = Math.abs(area / 2);
+    return area;
+}
+
+export const calculatePerimeter = (coordinates: Coordinate2D[]): number => {
+    let perimeter = 0
+
+    for (let i = 0; i < coordinates.length; i++) {
+        const coordinateA = coordinates[i]
+        const coordinateB = coordinates[(i+1)%coordinates.length]
+
+        perimeter += Math.abs(coordinateB.x - coordinateA.x) + Math.abs(coordinateB.y - coordinateA.y)
+    } 
+
+    return perimeter
+}
+
+
+export const calculateArea = (coordinates: Coordinate2D[]): number => {
+    const p = calculatePerimeter(coordinates)
+    const a = calculatePolygonArea(coordinates)
+
+    return a + (p/2) + 1
+}
