@@ -228,7 +228,12 @@ class BinarySearchTree {
     }
 
     private insertNode(node: Node, newNode: Node): void {
-        if (newNode.value.totalHeatLoss < node.value.totalHeatLoss) {
+        let diff = newNode.value.totalHeatLoss - node.value.totalHeatLoss
+        if (diff === 0) {
+            diff = (node.value.currentCoordinate.x + node.value.currentCoordinate.y) - 
+            (newNode.value.currentCoordinate.x + newNode.value.currentCoordinate.y)
+        }
+        if (diff < 0) {
             if (!node.left) {
                 node.left = newNode;
             } else {
