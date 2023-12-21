@@ -123,7 +123,7 @@ export function solve1(input: string): number {
         ]
 
         while (pulseQueue.length) {
-            const pulse = pulseQueue.shift()! // Todo: Replace with a FIFO queue
+            const pulse = pulseQueue.shift()!
 
             pulse.value ? highPulsesCount++ : lowPulsesCount++
 
@@ -137,12 +137,49 @@ export function solve1(input: string): number {
         }
     }
 
-
-
     const result = lowPulsesCount * highPulsesCount
     return result
 }
  
 export function solve2(input: string): number {
-    return -2
+    const modulesMap = inputToModules(input)
+
+    let lowPulsesCount = 0
+    let highPulsesCount = 0
+
+    // let rxCounts: number[] = []
+    let lowestRxCount = Number.MAX_SAFE_INTEGER
+
+    for (let i = 0; i < 10_000_000; i++) {
+        let rxCount = 0
+        let pulseQueue: Pulse[] = [
+            {source: 'button', target: 'broadcaster', value: false}
+        ]
+
+        while (pulseQueue.length) {
+            const pulse = pulseQueue.shift()!
+
+            pulse.value ? highPulsesCount++ : lowPulsesCount++
+
+            const module = modulesMap.get(pulse.target)
+            
+            if (pulse.target === 'rx') {
+                rxCount++
+            }            
+            if (module === undefined) {
+                continue
+            }
+
+            module.processPulse(pulse).forEach(p => pulseQueue.push(p))
+        }
+
+        // rxCounts.push(rxCount)
+        lowestRxCount = Math.min(rxCount, lowestRxCount)
+        if (rxCount === 1) {
+            return i+1
+        }
+    }
+
+    const result = lowPulsesCount * highPulsesCount
+    return result
 }
