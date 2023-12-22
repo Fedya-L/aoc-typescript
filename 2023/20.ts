@@ -150,7 +150,29 @@ export function solve2(input: string): number {
     // let rxCounts: number[] = []
     let lowestRxCount = Number.MAX_SAFE_INTEGER
 
-    for (let i = 0; i < 10_000_000; i++) {
+    let modulesToWatch = {
+        kv: 0,
+        jg: 0,
+        mr: 0,
+        rz: 0,
+    }
+
+    let modulesToWatch2 = {
+        kv: 0,
+        jg: 0,
+        mr: 0,
+        rz: 0,
+    }
+
+    let modulesToWatch3 = {
+        kv: 0,
+        jg: 0,
+        mr: 0, 
+        rz: 0,
+    }
+
+
+    for (let i = 1; i < 29001; i++) {
         let rxCount = 0
         let pulseQueue: Pulse[] = [
             {source: 'button', target: 'broadcaster', value: false}
@@ -163,6 +185,13 @@ export function solve2(input: string): number {
 
             const module = modulesMap.get(pulse.target)
             
+            if (pulse.source in modulesToWatch && pulse.value === true) {
+                if (modulesToWatch[pulse.source] === 0) {
+                    modulesToWatch[pulse.source] = i
+                }
+                    modulesToWatch2[pulse.source] = i
+                    modulesToWatch3[pulse.source] += 1
+            }
             if (pulse.target === 'rx') {
                 rxCount++
             }            
@@ -180,6 +209,31 @@ export function solve2(input: string): number {
         }
     }
 
+
+    let modulesToWatch4 = {
+        kv: modulesToWatch2.kv - modulesToWatch.kv,
+        jg: modulesToWatch2.jg - modulesToWatch.jg,
+        mr: modulesToWatch2.mr - modulesToWatch.mr,
+        rz: modulesToWatch2.rz - modulesToWatch.rz,
+    }
+
+    modulesToWatch4.kv /= modulesToWatch3.kv - 1
+    modulesToWatch4.jg /= modulesToWatch3.jg - 1
+    modulesToWatch4.mr /= modulesToWatch3.mr - 1
+    modulesToWatch4.rz /= modulesToWatch3.rz - 1
+
+    let dd = {
+        kv: modulesToWatch2.kv / modulesToWatch3.kv,
+        jg: modulesToWatch2.jg / modulesToWatch3.jg,
+        mr: modulesToWatch2.mr / modulesToWatch3.mr,
+        rz: modulesToWatch2.rz / modulesToWatch3.rz,
+    }
+
     const result = lowPulsesCount * highPulsesCount
-    return result
+
+    const gcd = (a, b) => b == 0 ? a : gcd(b, a % b)
+    const lcm = (a, b) => a / gcd(a, b) * b
+    const leastCommonMultiplier = Object.values(dd).reduce(lcm, 1)
+
+    return leastCommonMultiplier
 }
