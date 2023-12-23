@@ -59,4 +59,51 @@ class Reader {
     }
 }
 
-export { Reader }
+class ReaderV2 {
+
+    private _answers: {
+        sample1: number
+        sample2: number
+        real1: number
+        real2: number
+    }
+
+    private folderPath: string
+
+    constructor(year: number, day: number) {
+        this.folderPath = `inputs-and-answers/${year}/${day.toString().padStart(2, '0')}/`
+
+        const inputFilePath = this.folderPath + 'answers.json'
+        const rawAnswers = readFileSync(inputFilePath).toString()
+        this._answers = JSON.parse(rawAnswers)
+    }
+
+    get sampleAnswer1(): number {
+        return this._answers.sample1
+    }
+
+    get sampleAnswer2(): number {
+        return this._answers.sample2
+    }
+
+    get realAnswer1(): number {
+        return this._answers.real1
+    }
+
+    get realAnswer2(): number {
+        return this._answers.real2
+    }
+
+    readSampleInput(): string {
+        const filePath = `${this.folderPath}sample_input.txt`
+        return readFileSync(filePath).toString().trimEnd()
+    }
+
+    readRealInput(): string {
+        const filePath = `${this.folderPath}input.txt`
+        return readFileSync(filePath).toString().trimEnd()
+    }
+
+}
+
+export { Reader, ReaderV2 }
