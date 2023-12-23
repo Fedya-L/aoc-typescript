@@ -105,6 +105,28 @@ function unsupportingBrickIds(b: Brick, ctb: Map<string, Brick>): number[] {
     return [...set.values()]
 }
 
+function countSupportedBricks(b: Brick, itb: Map<number, Brick>): number {
+    let supportedBricks = new Set<number>()
+    supportedBricks.add(b.id)
+    
+    let idsToCheck = [...b.aboveBrickIds]
+    while (idsToCheck.length) {
+        const id = idsToCheck.shift()!
+        const bb = itb.get(id)!
+
+        const filtered = [...bb.underBrickIds].filter(id => !supportedBricks.has(id))
+        if (filtered.length > 0) {
+            continue
+        }
+        supportedBricks.add(id)
+        for (const id of bb.aboveBrickIds) {
+            idsToCheck.push(id)
+        }
+    }
+
+    return supportedBricks.size - 1
+}
+
 function calculateBrickSupport(b: Brick, ctb: Map<string, Brick>) {
     const upperCoords = b.coordinates.filter(c => c.z === b.maxZ)
     const upperZ = b.maxZ + 1
@@ -118,7 +140,7 @@ function calculateBrickSupport(b: Brick, ctb: Map<string, Brick>) {
     } 
 }
 
-export function solve1(i: string): number {
+export function solveAll(i: string): [number, number] {
 
     const idToBrick = new Map<number, Brick>()
     const coordinateToBrick = new Map<string, Brick>() 
@@ -131,8 +153,6 @@ export function solve1(i: string): number {
             coordinateToBrick.set(c.asString, b)
         }
     }
-
-    const coordinatesCount = bricks.reduce((p, b) => p + b.coordinates.length, 0)
 
     for (let b of bricks) {
         const minZ = getLowestPossibleZ(b, coordinateToBrick)
@@ -149,14 +169,10 @@ export function solve1(i: string): number {
 
     const removableBrickIds = new Set<number>()
 
-    // for (const b of bricks) {
-    //     const bb = unsupportingBrickIds(b, coordinateToBrick)
-    //     bb.forEach(id => removableBrickIds.add(id))
-    // }
-
     bricks.forEach(b => calculateBrickSupport(b, coordinateToBrick))
 
 
+    let totalBrickFallCount = 0
     for (const b of bricks) {
         if (b.aboveBrickIds.size === 0) {
             removableBrickIds.add(b.id)
@@ -173,15 +189,19 @@ export function solve1(i: string): number {
         }
         if (isTheOnlySupport == false) {
             removableBrickIds.add(b.id)
+        } else {
+            totalBrickFallCount += countSupportedBricks(b, idToBrick)
         }
     }
     
 
-    return removableBrickIds.size
+    return [removableBrickIds.size, totalBrickFallCount]
 }
 
-
+export function solve1(i: string): number {
+    return solveAll(i)[0]
+}
 
 export function solve2(i: string): number {
-    return -2
+    return solveAll(i)[1]
 }
