@@ -12,6 +12,8 @@ type Brick = {
     coordinates: Coordinate3d[],
     maxZ: number,
     minZ: number,
+    underBrickIds: Set<number>
+    aboveBrickIds: Set<number>
 }
 
 function stringToBrick(s: string, id: number): Brick {
@@ -24,15 +26,14 @@ function stringToBrick(s: string, id: number): Brick {
         coordinates,
         maxZ,
         minZ,
+        underBrickIds: new Set<number>(),
+        aboveBrickIds: new Set<number>(),
     }
 }
 
 function stringToCoordinate(s: string): Coordinate3d {
     const [x,y,z] = s.split(',').map(s => +s)
-    return {
-        x,y,z,
-        asString: s
-    }
+    return createCoordinate(x,y,z)
 }
 
 function createCoordinate(x:number,y: number, z: number): Coordinate3d {
@@ -55,9 +56,6 @@ function fillCoordinatesBetweenCoordiantes(c1: Coordinate3d, c2: Coordinate3d): 
 }
 
 function getLowestPossibleZ(b: Brick, ctb: Map<string, Brick>): number {
-    if (b.minZ <= 1) {
-        return b.minZ
-    }
     let z = b.minZ - 1
     const bottomCoords = b.coordinates.filter(c => c.z === b.minZ)
     while (z > 0) {
@@ -74,20 +72,20 @@ function getLowestPossibleZ(b: Brick, ctb: Map<string, Brick>): number {
 }
 
 function unsupportingBrickIds(b: Brick, ctb: Map<string, Brick>): number[] {
-    if (b.minZ <= 1) {
-        return []
-    }
-    const bottomCoords = b.coordinates.filter(c => c.z === b.minZ)
-    const underZ = b.minZ - 1
 
     const set = new Set<number>()
 
+    const bottomCoords = b.coordinates.filter(c => c.z === b.minZ)
+    const underZ = b.minZ - 1
     for (const bc of bottomCoords) {
         const ctc = createCoordinate(bc.x, bc.y, underZ)
         const brickBelow = ctb.get(ctc.asString)
         if (brickBelow !== undefined) {
             set.add(brickBelow.id)
         } 
+    }
+    if (set.size < 2) {
+        set.clear()
     }
 
     const upperCoords = b.coordinates.filter(c => c.z === b.maxZ)
@@ -101,28 +99,40 @@ function unsupportingBrickIds(b: Brick, ctb: Map<string, Brick>): number[] {
             break
         }
     }
-    if (set.size < 2) {
-        set.clear()
-    }
     if (!hasBrickAbove) {
         set.add(b.id)
     }
     return [...set.values()]
 }
 
+function calculateBrickSupport(b: Brick, ctb: Map<string, Brick>) {
+    const upperCoords = b.coordinates.filter(c => c.z === b.maxZ)
+    const upperZ = b.maxZ + 1
+    for (const uc of upperCoords) {
+        const ctc = createCoordinate(uc.x, uc.y, upperZ)
+        const brickAbove = ctb.get(ctc.asString)
+        if (brickAbove !== undefined) {
+            b.aboveBrickIds.add(brickAbove.id)
+            brickAbove.underBrickIds.add(b.id)
+        }
+    } 
+}
+
 export function solve1(i: string): number {
 
-    // let brickIdToBrick = new Map<number, Brick>()
-    let coordinateToBrick = new Map<string, Brick>() 
+    const idToBrick = new Map<number, Brick>()
+    const coordinateToBrick = new Map<string, Brick>() 
 
-    const bricks = i.split("\n").map(stringToBrick).sort((a, b) => a.minZ - b.minZ)
+    const bricks = i.split("\n").map(stringToBrick).sort((a, b) => a.maxZ - b.maxZ)
 
     for (const b of bricks) {
-        // brickIdToBrick.set(b.id, b)
+        idToBrick.set(b.id, b)
         for (const c of b.coordinates) {
             coordinateToBrick.set(c.asString, b)
         }
     }
+
+    const coordinatesCount = bricks.reduce((p, b) => p + b.coordinates.length, 0)
 
     for (let b of bricks) {
         const minZ = getLowestPossibleZ(b, coordinateToBrick)
@@ -139,9 +149,31 @@ export function solve1(i: string): number {
 
     const removableBrickIds = new Set<number>()
 
+    // for (const b of bricks) {
+    //     const bb = unsupportingBrickIds(b, coordinateToBrick)
+    //     bb.forEach(id => removableBrickIds.add(id))
+    // }
+
+    bricks.forEach(b => calculateBrickSupport(b, coordinateToBrick))
+
+
     for (const b of bricks) {
-        const bb = unsupportingBrickIds(b, coordinateToBrick)
-        bb.forEach(id => removableBrickIds.add(id))
+        if (b.aboveBrickIds.size === 0) {
+            removableBrickIds.add(b.id)
+            continue
+        }
+        
+        let isTheOnlySupport = false
+        for (const abi of b.aboveBrickIds) {
+            const ab = idToBrick.get(abi)!
+            if (ab.underBrickIds.size == 1) {
+                isTheOnlySupport = true
+                break
+            }
+        }
+        if (isTheOnlySupport == false) {
+            removableBrickIds.add(b.id)
+        }
     }
     
 
