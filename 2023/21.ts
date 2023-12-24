@@ -89,7 +89,7 @@ class CoordinateSet {
 }
 
 
-export function solve1v2(i: string, stepsToDo:  number): number {
+export function solve1v2(i: string, stepsToDo: number): number {
 
     const gm = inputToGardenMap(i)
     const sc = findStartingCoordinate(gm)
@@ -133,6 +133,61 @@ export function solve1v2(i: string, stepsToDo:  number): number {
     return stepsToDo % 2 === 0 ? evenCoordinates.data.size : oddCoordinates.data.size
 }
 
-export function solve2(input: string): number {
-    return -2
+export function fillMap(gm: GardenMap, sc: Coordinate2D, maxSteps: number): [number, number] {
+
+    const visited = new CoordinateSet()
+    const oddCoordinates = new CoordinateSet()
+    const evenCoordinates = new CoordinateSet()
+
+
+    let queue: {c: Coordinate2D, stepsDone: number}[] = [{c: sc, stepsDone: 0}]
+
+    while (queue.length) {
+        const {c, stepsDone} = queue.shift()!
+        if (visited.has(c)) continue
+        visited.add(c)
+        if (stepsDone % 2 === 0) {
+            evenCoordinates.add(c)
+        } else {
+            oddCoordinates.add(c) 
+        }
+        if (stepsDone >= maxSteps) {
+            continue
+        }
+
+          for (const {x, y} of neightbours) {
+            const nx = c.x + x, ny = c.y + y
+            const nc = {x: nx, y: ny}
+            const tile = gm.getXY(nc)
+            if (
+                tile !== '.' ||
+                visited.has(nc)
+                ) {
+                continue
+            }
+            queue.push({c: nc, stepsDone: stepsDone + 1})
+        }
+    }
+
+
+    return [evenCoordinates.data.size, oddCoordinates.data.size]
+}
+
+export function solve2(input: string, steps: number): number {
+    const gardenMap = inputToGardenMap(input)
+    const startingPoint = findStartingCoordinate(gardenMap)
+    
+    const gridWith = (steps - startingPoint.x) / gardenMap.xSize
+    const evenCount = (gridWith + 1) ** 2
+    const oddCount = (gridWith) ** 2
+
+
+    const [evenCoordinates, oddCoordinates] = fillMap(gardenMap, startingPoint, gardenMap.xSize * 3)
+    
+    let result = evenCount * evenCoordinates + oddCount * oddCoordinates
+
+    result += (gridWith + 1) * (evenCoordinates + oddCoordinates) * 2 
+
+
+    return result
 }

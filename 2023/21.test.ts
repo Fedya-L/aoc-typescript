@@ -38,7 +38,7 @@ describe('2023 21', () => {
         const input = reader.readSampleInput()
         const answer = reader.readSampleAnswer2()
 
-        expect(solve2(input)).toBe(answer)
+        expect(solve2(input, 1000)).toBe(answer)
     })
 
 
@@ -46,6 +46,6 @@ describe('2023 21', () => {
         const input = reader.readInput()
         const answer = reader.readAnswer2()
 
-        expect(solve2(input)).toBe(answer)
+        expect(solve2(input, 26501365)).toBe(answer)
     })
 })
