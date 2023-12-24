@@ -49,7 +49,7 @@ export function solve1(input: string, stepsCount: number): number {
     
     let steps = new Map<string, Coordinate2D>()
 
-    addCoordinateToMap(sc, steps)
+    addCoordinateToMap(sc, steps) 
 
     for (let i = 0; i < stepsCount; i++) {
         let nextSteps = new Map<string, Coordinate2D>()
@@ -62,6 +62,75 @@ export function solve1(input: string, stepsCount: number): number {
     }
 
     return steps.size
+}
+
+class CoordinateSet {
+    data: Set<string>
+
+    constructor(data: Set<string> | undefined = undefined) {
+        this.data = data ?? new Set()
+    }
+
+    add(c: Coordinate2D) {
+        this.data.add(this.coordinateToKey(c))
+    }
+
+    has(c: Coordinate2D) {
+        return this.data.has(this.coordinateToKey(c))
+    }
+
+    coordinateToKey(c: Coordinate2D): string {
+        return `${c.x},${c.y}`
+    }
+
+    copy(): CoordinateSet {
+        return new CoordinateSet(new Set([...this.data]))
+    }
+}
+
+
+export function solve1v2(i: string, stepsToDo:  number): number {
+
+    const gm = inputToGardenMap(i)
+    const sc = findStartingCoordinate(gm)
+
+    const visited = new CoordinateSet()
+    const oddCoordinates = new CoordinateSet()
+    const evenCoordinates = new CoordinateSet()
+
+
+    let queue: {c: Coordinate2D, stepsLeft: number}[] = [{c: sc, stepsLeft: stepsToDo}]
+
+    while (queue.length) {
+        const {c, stepsLeft} = queue.shift()!
+        if (visited.has(c)) continue
+        visited.add(c)
+        if (stepsLeft % 2 === 0) {
+            evenCoordinates.add(c)
+        } else {
+            oddCoordinates.add(c) 
+        }
+
+        if (stepsLeft === 0) {
+            continue
+        }
+
+        for (const {x, y} of neightbours) {
+            const nx = c.x + x, ny = c.y + y
+            const nc = {x: nx, y: ny}
+            const tile = gm.getXY(nc)
+            if (
+                tile !== '.' ||
+                visited.has(nc)
+                ) {
+                continue
+            }
+            queue.push({c: nc, stepsLeft: stepsLeft - 1})
+        }
+    }
+
+
+    return stepsToDo % 2 === 0 ? evenCoordinates.data.size : oddCoordinates.data.size
 }
 
 export function solve2(input: string): number {
