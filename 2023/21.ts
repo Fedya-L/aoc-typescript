@@ -133,7 +133,7 @@ export function solve1v2(i: string, stepsToDo: number): number {
     return stepsToDo % 2 === 0 ? evenCoordinates.data.size : oddCoordinates.data.size
 }
 
-export function fillMap(gm: GardenMap, sc: Coordinate2D, maxSteps: number): [number, number] {
+function fillMap(gm: GardenMap, sc: Coordinate2D, maxSteps: number): [number, number] {
 
     const visited = new CoordinateSet()
     const oddCoordinates = new CoordinateSet()
@@ -173,20 +173,57 @@ export function fillMap(gm: GardenMap, sc: Coordinate2D, maxSteps: number): [num
     return [evenCoordinates.data.size, oddCoordinates.data.size]
 }
 
+function fillMapV2(gm: GardenMap, sc: Coordinate2D): Map<string, number> {
+    const visited = new Map<string, number>
+
+
+    let queue: {c: Coordinate2D, stepsDone: number}[] = [{c: sc, stepsDone: 0}]
+
+    while (queue.length) {
+        const {c, stepsDone} = queue.shift()!
+        const ck = coordinateToKey(c)
+        if (visited.has(ck)) continue
+        visited.set(ck, stepsDone)
+
+          for (const {x, y} of neightbours) {
+            const nx = c.x + x, ny = c.y + y
+            const nc = {x: nx, y: ny}
+            const nck = coordinateToKey(nc)
+            const tile = gm.getXY(nc)
+            if (
+                tile !== '.' ||
+                visited.has(nck)
+                ) {
+                continue
+            }
+            queue.push({c: nc, stepsDone: stepsDone + 1})
+        }
+    }
+
+
+    return visited
+}
+
 export function solve2(input: string, steps: number): number {
     const gardenMap = inputToGardenMap(input)
     const startingPoint = findStartingCoordinate(gardenMap)
     
     const gridWith = (steps - startingPoint.x) / gardenMap.xSize
-    const evenCount = (gridWith + 1) ** 2
-    const oddCount = (gridWith) ** 2
 
+    const filledMap = [...fillMapV2(gardenMap, startingPoint)].map(e => e[1])
 
-    const [evenCoordinates, oddCoordinates] = fillMap(gardenMap, startingPoint, gardenMap.xSize * 3)
-    
-    let result = evenCount * evenCoordinates + oddCount * oddCoordinates
+    const evenCorners = filledMap.filter(v => (v % 2 == 0 && v > 65)).length
+    const oddCorners = filledMap.filter(v => (v % 2 == 1 && v > 65)).length
 
-    result += (gridWith + 1) * (evenCoordinates + oddCoordinates) * 2 
+    const evenFull = filledMap.filter(v => (v % 2 == 0)).length
+    const oddFull = filledMap.filter(v => (v % 2 == 1)).length
+
+    const result = (
+        (gridWith+1) ** 2 * oddFull +
+        gridWith ** 2 * evenFull -
+        (gridWith+1) * oddCorners +
+        gridWith * evenCorners
+    )
 
 
     return result
