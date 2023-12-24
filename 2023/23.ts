@@ -192,6 +192,10 @@ class GraphManager {
         gn2.connectedTo[gn1.id] = value
     }
 
+    getById(id: string): GraphNode {
+        return this.data.get(id)!
+    }
+
     private coordinateToKey(c: Coordinate2D): string {
         return `${c.x},${c.y}`
     }
@@ -268,6 +272,9 @@ export function solve2(i: string): number {
             )
             if (ncs.length === 0) {
                 // This is a dead end
+                if (cc.x === finishPoint.x && cc.y == finishPoint.y) {
+                    gm.connect(pathState.lastIntersectionCoordinate, cc, pathState.visitedCoordinates.data.size)
+                }
                 deadEnd = true
                 break
             }
@@ -314,8 +321,35 @@ export function solve2(i: string): number {
 
 
 
+    let nodePathsToProcess: {path: string[], value: number}[] = [
+        {
+            path: [coordinateToKey(startingPoint)], 
+            value: 0,
+        },
+    ]
 
+    const finalNodeId = coordinateToKey(finishPoint)
+    let usablePaths: {path: string[], value: number}[] = []
+    while (nodePathsToProcess.length) {
+        const nodePath = nodePathsToProcess.pop()!
 
+        const lastNodeId = nodePath.path[nodePath.path.length -1]
+        if (lastNodeId === finalNodeId) {
+            usablePaths.push(nodePath)
+            continue
+        }
+        const graphNode = gm.getById(lastNodeId)
 
-    return -2
+        for (const nextNodeId of Object.keys(graphNode.connectedTo)) {
+            if (nodePath.path.includes(nextNodeId)) {
+                continue
+            }
+            nodePathsToProcess.push({
+                path: [...nodePath.path, nextNodeId],
+                value: nodePath.value + graphNode.connectedTo[nextNodeId]
+            })
+        }
+    }
+
+    return usablePaths.sort((a,b) => b.value - a.value)[0].value
 }
